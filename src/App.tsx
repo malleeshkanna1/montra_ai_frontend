@@ -1,21 +1,77 @@
-import { Button } from "@/components/ui/button"
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import NotFound from "./components/layout/NotFound";
+import LoginForm from "./components/Auth/LoginForm";
+import { Toaster } from "@/components/ui/sonner";
+import { redirect } from "react-router-dom";
 
-export function App() {
+export default function App() {
+
+  const routerConfig = createBrowserRouter([
+    {
+      path: '/',
+      async lazy() {
+        const Layout = await import('./components/layout/Layout')
+        return { Component: Layout.default }
+      },
+      children: [
+        {
+          path: '',
+          async lazy() {
+            const Home = await import('./components/Home/Home');
+            return { Component: Home.default }
+          }
+        },
+        {
+          path: "/add/:mode",
+          async lazy() {
+            const Add = await import(
+              "./components/AddIncomeExpense/AddIncomeExpenses"
+            );
+
+            return { Component: Add.default };
+          },
+          loader({ params }) {
+            if (params.mode !== "income" && params.mode !== "expense") {
+              return redirect("/not-found");
+            }
+
+            return null;
+          },
+        },
+        {
+          path: '/transactions',
+          async lazy() {
+            const Transactions = await import('./components/TransactionHistory/Transactions');
+            return { Component: Transactions.default }
+          }
+        },
+        {
+          path: '/ai-advisor',
+          async lazy() {
+            const AIAdvisory = await import('./components/AIAdvisory/AIAdvisory');
+            return { Component: AIAdvisory.default }
+          }
+        },
+      ]
+    },
+    {
+      path: '/auth/login',
+      element: <LoginForm />
+    },
+    {
+      path: '/not-found',
+      element: <NotFound />
+    },
+    {
+      path: '*',
+      element: <NotFound />
+    }
+  ])
+
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
+    <div className="bg-[#eee]">
+      <Toaster position="top-right" richColors />
+      <RouterProvider router={routerConfig} />
     </div>
   )
 }
-
-export default App
